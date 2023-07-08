@@ -200,6 +200,47 @@ class _HomeContentState extends State<HomeContent> {
                 ),
               ],
             ),
+            child: Column(
+              children: [
+                SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 90,
+                      height: 90,
+                      decoration: BoxDecoration(
+                        color: Color(0xFFD9D9D9),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Container(
+                          width: 80,
+                          height: 80,
+                          decoration: BoxDecoration(
+                            image: DecorationImage(
+                              image:
+                                  AssetImage('assets/images/logopolines.png'),
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 10),
+                Text(
+                  'Polines`s Information and Attender',
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
         Positioned(
@@ -249,46 +290,6 @@ class _HomeContentState extends State<HomeContent> {
                 color: Color(0xfffdc500),
               ),
             ),
-          ),
-        ),
-        Positioned(
-          top: MediaQuery.of(context).size.height / 3 - 60,
-          left: MediaQuery.of(context).size.width / 2 - 43,
-          child: Container(
-            width: 86,
-            height: 86,
-            decoration: BoxDecoration(
-              color: Color(0xFFD9D9D9),
-              shape: BoxShape.circle,
-            ),
-          ),
-        ),
-        Positioned(
-          bottom: MediaQuery.of(context).size.height / 8 + 240,
-          left: 0,
-          right: 0,
-          child: Center(
-            child: Text(
-              'Polines`s Information and Attender',
-              style: TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-          ),
-        ),
-        Positioned(
-          bottom: MediaQuery.of(context).size.height / 3 + 105,
-          left: MediaQuery.of(context).size.width / 2 - 36.5,
-          child: Container(
-            width: 73,
-            height: 73,
-            decoration: BoxDecoration(
-                image: DecorationImage(
-                    image: AssetImage('assets/images/logopolines.png'),
-                    fit: BoxFit.cover)),
           ),
         ),
       ],

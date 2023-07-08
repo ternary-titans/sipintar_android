@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:presensi_mahasiswa/home.dart';
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
+
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  bool _obscureText = true;
 
   @override
   Widget build(BuildContext context) {
@@ -49,7 +56,7 @@ class LoginPage extends StatelessWidget {
             ),
           ),
           Positioned(
-            top: MediaQuery.of(context).size.height / 3 + 100,
+            bottom: MediaQuery.of(context).size.height / 3 - 100,
             left: MediaQuery.of(context).size.width / 2 - 150,
             child: Container(
               width: 300,
@@ -60,7 +67,7 @@ class LoginPage extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  SizedBox(height: 85),
+                  SizedBox(height: 70),
                   Row(
                     children: [
                       SizedBox(width: 19),
@@ -81,7 +88,7 @@ class LoginPage extends StatelessWidget {
                             width: 146,
                             height: 50,
                             child: TextField(
-                              style: TextStyle(color: Colors.white),
+                              style: TextStyle(color: Color(0xff00296B)),
                               decoration: InputDecoration(
                                 filled: true,
                                 fillColor: Color(0xffd9d9d9),
@@ -120,7 +127,8 @@ class LoginPage extends StatelessWidget {
                             width: 146,
                             height: 50,
                             child: TextField(
-                              style: TextStyle(color: Colors.white),
+                              style: TextStyle(color: Color(0xff00296B)),
+                              obscureText: _obscureText,
                               decoration: InputDecoration(
                                 filled: true,
                                 fillColor: Color(0xffd9d9d9),
@@ -130,11 +138,24 @@ class LoginPage extends StatelessWidget {
                                   borderSide: BorderSide(color: Colors.white),
                                   borderRadius: BorderRadius.circular(10),
                                 ),
+                                suffixIcon: IconButton(
+                                  onPressed: (){
+                                    setState((){
+                                      _obscureText = !_obscureText;
+                                    });
+                                  },
+                                  icon: Icon(
+
+                                    _obscureText
+                                    ? Icons.visibility
+                                    : Icons.visibility_off,
+                                  ),
+                                ),
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ),
                     ],
                   ),
                   SizedBox(height: 20),
@@ -166,30 +187,6 @@ class LoginPage extends StatelessWidget {
                   ),
                 ],
               ),
-            ),
-          ),
-          Positioned(
-            top: MediaQuery.of(context).size.height / 3 + 51,
-            left: MediaQuery.of(context).size.width / 2 - 51,
-            child: Container(
-              width: 102,
-              height: 102,
-              decoration: BoxDecoration(
-                color: Color(0xFFD9D9D9),
-                shape: BoxShape.circle,
-              ),
-            ),
-          ),
-          Positioned(
-            top: MediaQuery.of(context).size.height / 3 + 55,
-            left: MediaQuery.of(context).size.width / 2 - 43.5,
-            child: Container(
-              width: 87,
-              height: 87,
-              decoration: BoxDecoration(
-                  image: DecorationImage(
-                      image: AssetImage('assets/images/logopolines.png'),
-                      fit: BoxFit.cover)),
             ),
           ),
           Positioned(
