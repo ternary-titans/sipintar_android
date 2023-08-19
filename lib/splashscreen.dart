@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:presensi_mahasiswa/main.dart';
-
 import 'login.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -15,15 +13,15 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
+  }
+  
+  Widget build(BuildContext context) {
     Future.delayed(Duration(seconds: 5), () {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => LoginPage()),
       );
     });
-  }
-
-  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0xff00296B),
       body: Center(

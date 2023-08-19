@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:convex_bottom_bar/convex_bottom_bar.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 import 'package:intl/intl.dart';
-import 'package:date_format/date_format.dart';
-import 'package:qr_flutter/qr_flutter.dart';
-import 'package:camera/camera.dart';
-import 'dart:io';
-import 'package:simple_barcode_scanner/simple_barcode_scanner.dart';
 import 'package:flutter/services.dart';
 import 'login.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+import 'package:presensi_mahasiswa/main.dart';
+import 'package:jwt_decoder/jwt_decoder.dart';
+
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -25,124 +25,122 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          backgroundColor: Color(0xffFDC500),
-          foregroundColor: Color(0xff00296B),
-          title: Text(
-            "PINTAR",
-            style: TextStyle(
-              fontFamily: 'Poppins',
-              fontSize: 26,
-              fontWeight: FontWeight.bold,
-              color: Color(0xff00296B),
-            ),
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Color(0xffFDC500),
+        foregroundColor: Color(0xff00296B),
+        title: Text(
+          "PINTAR",
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 26,
+            fontWeight: FontWeight.bold,
+            color: Color(0xff00296B),
           ),
-          actions: [
-            IconButton(
-              icon: Icon(Icons.logout_rounded, size: 38),
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return AlertDialog(
-                      title: Text(
-                        "Apakah anda yakin ingin keluar?",
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xff00296B),
-                        ),
+        ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.logout_rounded, size: 38),
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    title: Text(
+                      "Apakah anda yakin ingin keluar?",
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xff00296B),
                       ),
-                      actions: [
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Color(0xff00296B),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(9.0),
-                            ),
+                    ),
+                    actions: [
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Color(0xff00296B),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(9.0),
                           ),
-                          child: Text(
-                            'Yes',
-                            style: TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xffFED501),
-                            ),
-                          ),
-                          onPressed: () {
-                            // Perform logout action here
-                            Navigator.of(context).pop(); // Close the dialog
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => LoginPage(),
-                              ),
-                            );
-                          },
                         ),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Color(0xff00296B),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(9.0),
-                            ),
+                        child: Text(
+                          'Yes',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xffFED501),
                           ),
-                          child: Text(
-                            'No',
-                            style: TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xffFED501),
-                            ),
-                          ),
-                          onPressed: () {
-                            // Perform logout action here
-                            Navigator.of(context).pop(); // Close the dialog
-                          },
                         ),
-                      ],
-                    );
-                  },
-                );
-              },
-            ),
-          ],
-        ),
-        body: IndexedStack(
-          index: _currentIndex,
-          children: [
-            HomeContent(),
-            RecapPage(),
-            ScanQRPage(),
-            MessagePage(),
-            SchedulePage(),
-          ],
-        ),
-        bottomNavigationBar: ConvexAppBar(
-          style: TabStyle.fixedCircle,
-          height: 80,
-          backgroundColor: Color(0xFFFDC500),
-          color: Color(0xFF00296B),
-          activeColor: Color(0xff5F5F5F),
-          items: [
-            TabItem(icon: Icons.home, title: 'Home'),
-            TabItem(icon: Icons.checklist, title: 'Recap'),
-            TabItem(icon: Icons.qr_code_scanner, title: 'ScanQR'),
-            TabItem(icon: Icons.message, title: 'Message'),
-            TabItem(icon: Icons.schedule, title: 'Schedule'),
-          ],
-          initialActiveIndex: _currentIndex,
-          onTap: (int index) {
-            setState(() {
-              _currentIndex = index;
-            });
-          },
-        ),
+                        onPressed: () {
+                          // Perform logout action here
+                          Navigator.of(context).pop(); // Close the dialog
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => LoginPage(),
+                            ),
+                          );
+                        },
+                      ),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Color(0xff00296B),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(9.0),
+                          ),
+                        ),
+                        child: Text(
+                          'No',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xffFED501),
+                          ),
+                        ),
+                        onPressed: () {
+                          // Perform logout action here
+                          Navigator.of(context).pop(); // Close the dialog
+                        },
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
+          ),
+        ],
+      ),
+      body: IndexedStack(
+        index: _currentIndex,
+        children: [
+          HomeContent(),
+          RecapPage(),
+          ScanQRPage(),
+          MessagePage(),
+          SchedulePage(),
+        ],
+      ),
+      bottomNavigationBar: ConvexAppBar(
+        style: TabStyle.fixedCircle,
+        height: 80,
+        backgroundColor: Color(0xFFFDC500),
+        color: Color(0xFF00296B),
+        activeColor: Color(0xff5F5F5F),
+        items: [
+          TabItem(icon: Icons.home, title: 'Home'),
+          TabItem(icon: Icons.checklist, title: 'Recap'),
+          TabItem(icon: Icons.qr_code_scanner, title: 'ScanQR'),
+          TabItem(icon: Icons.message, title: 'Message'),
+          TabItem(icon: Icons.schedule, title: 'Schedule'),
+        ],
+        initialActiveIndex: _currentIndex,
+        onTap: (int index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
       ),
     );
   }
@@ -156,6 +154,58 @@ class HomeContent extends StatefulWidget {
 }
 
 class _HomeContentState extends State<HomeContent> {
+  String userToken = '';
+  String namaMahasiswa = '';
+  String nim = '';
+  String kelas = '';
+  String jurusan = '';
+  int mahasiswaId = -1;
+
+  @override
+  void initState() {
+    super.initState();
+    getToken();
+  }
+
+  Future<void> getToken() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    SharedPreferences prefsId = await SharedPreferences.getInstance();
+    String? token = prefs.getString('user_token');
+    setState(() {
+      userToken = token ?? '';
+    });
+    var url = Uri.parse('http://192.168.1.26:3000/api/users/current');
+    var headers = {"Authorization": userToken};
+    var response = await http.get(url, headers: headers);
+
+    if (response.statusCode == 200) {
+      var responseData = jsonDecode(response.body);
+      print(responseData);
+      var data = responseData['data'];
+      var id = data['id'];
+
+      Provider.of<MahasiswaIdProvider>(context, listen: false)
+          .setMahasiswaId(id);
+
+      int mhsId =
+          Provider.of<MahasiswaIdProvider>(context, listen: false).mahasiswaId;
+
+      prefsId.setInt('mhs_id', mhsId);
+
+      print("CekMHSID ${mhsId}");
+
+      setState(() {
+        namaMahasiswa = data['nama_mahasiswa'];
+        nim = data['nim'];
+        kelas = data['kelas'];
+        jurusan = data['jurusan'];
+      });
+    } else {
+      print(response.body);
+      print('Failed to fetch data');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -244,51 +294,44 @@ class _HomeContentState extends State<HomeContent> {
           ),
         ),
         Positioned(
-          bottom: MediaQuery.of(context).size.height / 8 + 170,
+          bottom: MediaQuery.of(context).size.height / 8 + 60,
           left: 0,
           right: 0,
           child: Center(
-            child: Text(
-              'Welcome,',
-              style: TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Color(0xfffdc500),
-              ),
-            ),
-          ),
-        ),
-        Positioned(
-          bottom: MediaQuery.of(context).size.height / 8 + 140,
-          left: 0,
-          right: 0,
-          child: Center(
-            child: Text(
-              'Nur Imam Nazihah',
-              style: TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 25,
-                fontWeight: FontWeight.bold,
-                color: Color(0xfffdc500),
-                decoration: TextDecoration.underline,
-              ),
-            ),
-          ),
-        ),
-        Positioned(
-          bottom: MediaQuery.of(context).size.height / 8 + 120,
-          left: 0,
-          right: 0,
-          child: Center(
-            child: Text(
-              'ABT-3A / 4.52.20.0.21 / Semester 6',
-              style: TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 15,
-                fontWeight: FontWeight.w300,
-                color: Color(0xfffdc500),
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  'Welcome,',
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xfffdc500),
+                  ),
+                ),
+                SizedBox(height: 2),
+                Text(
+                  namaMahasiswa,
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 25,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xfffdc500),
+                    decoration: TextDecoration.underline,
+                  ),
+                ),
+                SizedBox(height: 2),
+                Text(
+                  '$kelas / $nim / $jurusan',
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 15,
+                    fontWeight: FontWeight.w300,
+                    color: Color(0xfffdc500),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -305,42 +348,55 @@ class RecapPage extends StatefulWidget {
 }
 
 class _RecapPageState extends State<RecapPage> {
-  List<List<String>> sourceData = [
-    [
-      'Nama Mahasiswa',
-      'NIM',
-      'Kelas',
-      'Jurusan',
-      'Program Studi',
-      'Semester',
-      'Dosen Wali',
-    ],
-    [
-      'Nur Imam Nazihah',
-      '4.52.20.0.21',
-      'ABT-3A',
-      'Administrasi Bisnis',
-      'D4-Administrasi Bisnis Terapan',
-      'VI / Genap',
-      'Iwan Hermawan',
-    ],
+  List<List<String>> transposedData = [
+    ['Nama Mahasiswa', ''],
+    ['NIM', ''],
+    ['Kelas', ''],
+    ['Jurusan', ''],
+    ['Program Studi', ''],
   ];
 
-  List<List<String>> transposedData = [
-    ['Nama Mahasiswa', 'Nur Imam Nazihah'],
-    ['NIM', '4.52.20.0.21'],
-    ['Kelas', 'ABT-3A'],
-    ['Jurusan', 'Administrasi Bisnis'],
-    ['Prodi', 'D4-Administrasi Bisnis Terapan'],
-    ['Semester', 'VI / Genap'],
-    ['Dosen Wali', 'Iwan Hermawan'],
-  ];
+  String userToken = '';
+
+  Future<void> getCurrentUserData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('user_token');
+    setState(() {
+      userToken = token ?? '';
+    });
+
+    var url = Uri.parse('http://192.168.1.26:3000/api/users/current');
+    var headers = {"Authorization": userToken};
+    var response = await http.get(url, headers: headers);
+
+    if (response.statusCode == 200) {
+      var responseData = jsonDecode(response.body);
+      var userData = responseData['data'];
+
+      setState(() {
+        transposedData[0][1] = userData['nama_mahasiswa'];
+        transposedData[1][1] = userData['nim'];
+        transposedData[2][1] = userData['kelas'];
+        transposedData[3][1] = userData['jurusan'];
+        transposedData[4][1] = userData['prodi'];
+      });
+    } else {
+      print(response.body);
+      print('Failed to fetch data');
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    getCurrentUserData();
+  }
 
   List<List<String>> secondTableData = [
     [
       'No',
       'Mata Kuliah',
-      'Jumlah Pertemuan',
+      'Jumlah Jam Pertemuan',
       'Hadir',
       'Izin',
       'Alpa',
@@ -350,57 +406,46 @@ class _RecapPageState extends State<RecapPage> {
     ],
     [
       '1',
-      'Basis Data',
-      '16',
-      '10',
-      '4',
-      '1',
-      '1',
-      '62.5%',
+      'Basis Data Jaringan',
+      '32 jam',
+      '30 jam',
+      '0 jam',
+      '2 jam',
+      '0 jam',
+      '93.75%',
       'Lihat Detail',
     ],
     [
       '2',
-      'Basis Data',
-      '16',
-      '10',
-      '4',
-      '1',
-      '1',
-      '62.5%',
+      'Sistem Informasi',
+      '36 jam',
+      '36 jam',
+      '0 jam',
+      '0 jam',
+      '0 jam',
+      '100%',
       'Lihat Detail',
     ],
     [
       '3',
-      'Basis Data',
-      '16',
-      '10',
-      '4',
-      '1',
-      '1',
-      '62.5%',
+      'Pemrograman Game',
+      '28 jam',
+      '28 jam',
+      '0 jam',
+      '0 jam',
+      '0 jam',
+      '100%',
       'Lihat Detail',
     ],
     [
       '4',
-      'Basis Data',
-      '16',
-      '10',
-      '4',
-      '1',
-      '1',
-      '62.5%',
-      'Lihat Detail',
-    ],
-    [
-      '5',
-      'Basis Data',
-      '16',
-      '10',
-      '4',
-      '1',
-      '1',
-      '62.5%',
+      'Jaringan Komputer',
+      '30 jam',
+      '30 jam',
+      '0 jam',
+      '0 jam',
+      '0 jam',
+      '100%',
       'Lihat Detail',
     ],
   ];
@@ -413,14 +458,21 @@ class _RecapPageState extends State<RecapPage> {
     int x = 0;
 
     for (int i = 1; i < secondTableData.length; i++) {
-      n += int.parse(secondTableData[i][6]);
-      y += int.parse(secondTableData[i][4]);
-      x += int.parse(secondTableData[i][5]);
+      String sakitValue =
+          secondTableData[i][6].replaceAll(RegExp(r'[^0-9]'), '');
+      String izinValue =
+          secondTableData[i][4].replaceAll(RegExp(r'[^0-9]'), '');
+      String alpaValue =
+          secondTableData[i][5].replaceAll(RegExp(r'[^0-9]'), '');
+
+      n += int.parse(sakitValue);
+      y += int.parse(izinValue);
+      x += int.parse(alpaValue);
     }
 
-    String sakitText = 'Sakit   : $n Hari';
-    String izinText = 'Izin       : $y Hari';
-    String alpaText = 'Alpa    : $x Hari';
+    String sakitText = 'Sakit   : $n Jam';
+    String izinText = 'Izin       : $y Jam';
+    String alpaText = 'Alpa    : $x Jam';
 
     return SingleChildScrollView(
       child: Column(
@@ -619,49 +671,30 @@ class _DetailRecapPageState extends State<DetailRecapPage> {
       'Kode Matkul',
       'Mata Kuliah',
       'Jumlah Pertemuan',
-      'Jumlah SKS',
       'Dosen',
     ],
-    [
-      '2022/2023',
-      '123-234-345',
-      'Basis Data',
-      '16 Pertemuan',
-      '24 SKS',
-      'Iwan Hermawan'
-    ]
+    ['2022/2023', '123-234-345', 'Jaringan Komputer', '30 jam', 'Mardiyono']
   ];
 
   List<List<String>> transposedData = [
     ['Tahun Ajaran', '2022/2023'],
     ['Kode Matkul', '123-234-345'],
-    ['Mata Kuliah', 'Basis Data'],
-    ['Jumlah Pertemuan', '16 Pertemuan'],
-    ['Jumlah SKS', '24 SKS'],
-    ['Dosen', 'Iwan Hermawan']
+    ['Mata Kuliah', 'Jaringan Komputer'],
+    ['Jumlah Pertemuan', '30 jam'],
+    ['Dosen', 'Mardiyono']
   ];
 
   List<List<String>> secondTableData = [
     [
       'No',
-      'Tanggal Realisasi',
-      'Jam Realisasi',
-      'Jumlah SKS',
+      'Tanggal Realisasi \n Jam Realisasi',
       'Topik Perkuliahan',
       'Keterangan'
     ],
-    ['1', '01/02/23', '07.00-08.30', '2 SKS', 'Pengenalan Database', 'Hadir'],
-    ['2', '03/02/23', '07.00-08.30', '2 SKS', 'Pengenalan Database', 'Sakit'],
-    ['3', '05/02/23', '07.00-08.30', '2 SKS', 'Pengenalan Database', 'Izin'],
-    ['4', '09/02/23', '07.00-08.30', '2 SKS', 'Pengenalan Database', 'Alpa'],
-    [
-      '5',
-      '10/02/23',
-      '07.00-08.30',
-      '2 SKS',
-      'Pengenalan Database',
-      'Terlambat 5-90 menit'
-    ],
+    ['1', '01/02/23 \n 07.00-08.30', 'Pengenalan Jaringan', 'Hadir'],
+    ['2', '03/02/23 \n 07.00-08.30', 'Presentasi', 'Hadir'],
+    ['3', '05/02/23 \n 07.00-08.30', 'Konfigurasi Jaringan', 'Hadir'],
+    ['4', '09/02/23 \n 07.00-08.30', 'IP Address', 'Hadir'],
   ];
 
   @override
@@ -742,7 +775,7 @@ class _DetailRecapPageState extends State<DetailRecapPage> {
                   margin: EdgeInsets.symmetric(horizontal: 20, vertical: 30),
                   child: DataTable(
                     dataRowHeight: 50,
-                    headingRowHeight: 30,
+                    headingRowHeight: 50,
                     decoration: BoxDecoration(
                       border: Border.all(color: Colors.grey),
                       color: Colors.grey[200],
@@ -760,7 +793,7 @@ class _DetailRecapPageState extends State<DetailRecapPage> {
                             ),
                             maxLines: 5,
                             overflow: TextOverflow.ellipsis,
-                            textAlign: TextAlign.center,
+                            textAlign: TextAlign.left,
                           ),
                         ),
                       );
@@ -774,7 +807,7 @@ class _DetailRecapPageState extends State<DetailRecapPage> {
                             Container(
                               child: Text(
                                 cellValue,
-                                textAlign: TextAlign.center,
+                                textAlign: TextAlign.left,
                                 style: TextStyle(
                                   fontFamily: 'Poppins',
                                   fontSize: 12,
@@ -798,6 +831,7 @@ class _DetailRecapPageState extends State<DetailRecapPage> {
   }
 }
 
+
 class ScanQRPage extends StatefulWidget {
   const ScanQRPage({Key? key}) : super(key: key);
 
@@ -808,33 +842,70 @@ class ScanQRPage extends StatefulWidget {
 class _ScanQRPageState extends State<ScanQRPage> {
   final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
   Barcode? result;
-  QRViewController? controller;
-  bool isQRDetected = false;
+  bool isScanning = false;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
+      body: isScanning ? _buildScannerView() : _buildScanButton(),
+    );
+  }
+
+  Widget _buildScanButton() {
+    return Center(
+      child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
+          Text(
+            'Klik untuk melakukkan presensi',
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           ElevatedButton(
-            onPressed: () async {
-              var res = await Navigator.push<String>(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => SimpleBarcodeScannerPage(),
-                ),
-              );
+            onPressed: () {
               setState(() {
-                if (res != null) {
-                  result = Barcode(code: res);
-                  _showSuccessDialog();
-                }
+                isScanning = true;
               });
             },
-            child: const Text('PRESENSI PERKULIAHAN'),
+            style: ButtonStyle(
+              backgroundColor:
+                  MaterialStateProperty.all<Color>(Color(0xFF00296B)),
+              foregroundColor:
+                  MaterialStateProperty.all<Color>(Color(0xFFFDC500)),
+            ),
+            child: const Text(
+              'Scan QR Code',
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildScannerView() {
+    return WillPopScope(
+      onWillPop: () async {
+        setState(() {
+          isScanning = false;
+        });
+        return true;
+      },
+      child: SimpleBarcodeScannerPage(
+        onResult: (barcode) {
+          setState(() {
+            result = barcode;
+            isScanning = false;
+          });
+          _showSuccessDialog();
+        },
       ),
     );
   }
@@ -844,9 +915,27 @@ class _ScanQRPageState extends State<ScanQRPage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Presensi Berhasil'),
-          content: Text('Berhasil melakukan presensi perkuliahan.\n'
-              'QR Code: ${result?.code}'),
+          title: const Text(
+            'Presensi Berhasil',
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: Text(
+            'Berhasil melakukan presensi perkuliahan.\n'
+            'Matakuliah: Pemrograman Game\n'
+            'Tanggal: 07-08-2023\n'
+            'Jam: 08.00\n'
+            'Dosen: Liliek Triyono\n'
+            'Topik Perkuliahan: Presentasi Tugas Besar',
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 14,
+              fontWeight: FontWeight.w300,
+            ),
+          ),
           actions: <Widget>[
             TextButton(
               child: const Text('Tutup'),
@@ -862,7 +951,10 @@ class _ScanQRPageState extends State<ScanQRPage> {
 }
 
 class SimpleBarcodeScannerPage extends StatefulWidget {
-  const SimpleBarcodeScannerPage({Key? key}) : super(key: key);
+  final Function(Barcode) onResult;
+
+  const SimpleBarcodeScannerPage({Key? key, required this.onResult})
+      : super(key: key);
 
   @override
   _SimpleBarcodeScannerPageState createState() =>
@@ -872,7 +964,6 @@ class SimpleBarcodeScannerPage extends StatefulWidget {
 class _SimpleBarcodeScannerPageState extends State<SimpleBarcodeScannerPage> {
   final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
   late QRViewController controller;
-  Barcode? result;
 
   @override
   void dispose() {
@@ -883,32 +974,133 @@ class _SimpleBarcodeScannerPageState extends State<SimpleBarcodeScannerPage> {
   void onQRViewCreated(QRViewController controller) {
     this.controller = controller;
     controller.scannedDataStream.listen((scanData) {
-      setState(() {
-        if (scanData.code != null) {
-          result = Barcode(code: scanData.code!);
-          Navigator.of(context).pop(result);
-        }
-      });
+      if (scanData.code != null) {
+        final result = Barcode(code: scanData.code!);
+
+        // Kirim data QR code ke endpoint
+        sendDataToEndpoint(result);
+        // Tampilkan dialog sukses
+        _showSuccessDialog(result);
+
+        // Berhenti memindai setelah mendapatkan hasil
+        controller.pauseCamera();
+        //widget.onResult(result);
+      }
     });
+  }
+
+  String userToken = '';
+  
+  int mahasiswaId = -1;
+
+  void sendDataToEndpoint(Barcode qrCodeData) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('user_token');
+    setState(() {
+      userToken = token ?? '';
+    });
+    final String apiUrl = 'http://192.168.1.26:3000/api/presensi';
+
+    Map<String, dynamic> requestBody = {
+      'mahasiswaId': 1, // Replace with the actual mahasiswa_id
+    'waktu_presensi': DateTime.now().toUtc().toIso8601String(), 
+      'qrData': qrCodeData.code,
+    
+      // Add other data you want to send to the endpoint
+    };
+
+    final response = await http.post(
+      Uri.parse(apiUrl),
+      headers: {'Content-Type': 'application/json', 
+                      "Authorization": userToken},
+      body: jsonEncode(requestBody),
+    );
+
+    if (response.statusCode == 200) {
+      // Jika request berhasil, tidak perlu tindakan khusus di sini
+    } else {
+      // Jika request gagal, tampilkan pesan error
+      print('Error sending data to endpoint: ${response.statusCode}');
+    }
+  }
+
+  void _showSuccessDialog(Barcode qrCodeData) async {
+    String jwtToken = qrCodeData.code;
+    Map<String, dynamic> decodedToken = JwtDecoder.decode(jwtToken);
+    await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text(
+            'Presensi Berhasil',
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Berhasil melakukan presensi perkuliahan.',
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 14,
+                fontWeight: FontWeight.w300,
+              ),
+            ),
+            SizedBox(height: 10),
+            Text(
+              'QR Code: ${qrCodeData.code}',
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 14,
+                fontWeight: FontWeight.w300,
+              ),
+            ),
+            // Display decoded JWT token data
+            Text(
+              'Nama Mahasiswa: ${decodedToken['nama']}',
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 14,
+                fontWeight: FontWeight.w300,
+              ),
+            ),
+            // Add more information from the decoded token
+            // ...
+          ],
+        ),
+        actions: <Widget>[
+          TextButton(
+            child: const Text('Tutup'),
+            onPressed: () {
+              Navigator.pop(context); // Tutup dialog
+              Navigator.pop(context); // Kembali ke halaman ScanQRPage
+            },
+          ),
+        ],
+      );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
-          Expanded(
-            child: QRView(
-              key: qrKey,
-              onQRViewCreated: onQRViewCreated,
-              overlay: QrScannerOverlayShape(
-                borderColor: Colors.red,
-                borderRadius: 10,
-                borderLength: 30,
-                borderWidth: 10,
-                cutOutSize: MediaQuery.of(context).size.width * 0.8,
-              ),
+      body: Stack(
+        children: [
+          QRView(
+            key: qrKey,
+            onQRViewCreated: onQRViewCreated,
+            overlay: QrScannerOverlayShape(
+              borderColor: Colors.red,
+              borderRadius: 10,
+              borderLength: 30,
+              borderWidth: 10,
+              cutOutSize: MediaQuery.of(context).size.width * 0.8,
             ),
           ),
         ],
@@ -922,6 +1114,7 @@ class Barcode {
 
   Barcode({required this.code});
 }
+
 
 class MessagePage extends StatefulWidget {
   const MessagePage({Key? key}) : super(key: key);
@@ -1129,10 +1322,18 @@ class _MessagePageState extends State<MessagePage> {
   }
 
   Widget _buildCard(String title, String content, VoidCallback onPressed) {
+    Color cardColor;
+    if (title == 'SURAT PERINGATAN 1 !!!' ||
+        title == 'SURAT PERINGATAN 2 !!!' ||
+        title == 'SURAT PERINGATAN 3 !!!') {
+      cardColor = Color(0xFF670000);
+    } else {
+      cardColor = Color(0xFF01509D);
+    }
     return GestureDetector(
       onTap: onPressed,
       child: Card(
-        color: Color(0xFF01509D),
+        color: cardColor,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(22.0),
         ),
@@ -1195,172 +1396,117 @@ class SchedulePage extends StatefulWidget {
 }
 
 class _SchedulePageState extends State<SchedulePage> {
-  List<List<String>> sourceData = [
-    [
-      'Jurusan',
-      'Program Studi',
-      'Semester',
-      'Tahun Akademik',
-      'Kelas',
-      'Dosen Wali'
-    ],
-    [
-      'Administrasi Bisnis',
-      'D4-Administrasi Bisnis Terapan',
-      'VI / Genap',
-      '2022/2023',
-      'ABT-3A',
-      'Iwan Hermawan'
-    ],
+  List<List<String>> transposedData = [
+    ['Jurusan', ''],
+    ['Program Studi', ''],
+    ['Kelas', ''],
   ];
 
-  List<List<String>> transposedData = [
-    ['Jurusan', 'Administrasi Bisnis'],
-    ['Program Studi', 'D4-Administrasi Bisnis Terapan'],
-    ['Semester', 'VI / Genap'],
-    ['Tahun Akademik', '2022/2023'],
-    ['Kelas', 'ABT-3A'],
-    ['Dosen Wali', 'Iwan Hermawan'],
-  ];
+  String userToken = '';
+  int mhs_id = 0;
+
+  Future<void> getCurrentUserData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('user_token');
+    setState(() {
+      userToken = token ?? '';
+    });
+
+    var url = Uri.parse('http://192.168.1.26:3000/api/users/current');
+    var headers = {"Authorization": userToken};
+    var response = await http.get(url, headers: headers);
+
+    if (response.statusCode == 200) {
+      var responseData = jsonDecode(response.body);
+      var userData = responseData['data'];
+
+      setState(() {
+        transposedData[0][1] = userData['jurusan'];
+        transposedData[1][1] = userData['prodi'];
+        transposedData[2][1] = userData['kelas'];
+      });
+    } else {
+      print(response.body);
+      print('Failed to fetch data');
+    }
+  }
 
   List<List<String>> secondTableData = [
-    ['Tanggal', 'Jam', 'Kode Matkul', 'Matkul', 'Dosen', 'Ruangan', 'Aksi'],
-    [
-      '01-02-22',
-      '08:00-10:00',
-      '123-345-567',
-      'Pemrograman Basis Data',
-      'Iwan Hermawan',
-      'MSTIII/02',
-      'Aktivasi'
-    ],
-    [
-      '01-02-22',
-      '08:00-10:00',
-      '123-345-567',
-      'Pemrograman Basis Data',
-      'Iwan Hermawan',
-      'MSTIII/02',
-      'Aktivasi'
-    ],
-    [
-      '01-02-22',
-      '08:00-10:00',
-      '123-345-567',
-      'Pemrograman Basis Data',
-      'Iwan Hermawan',
-      'MSTIII/02',
-      'Aktivasi'
-    ],
-    [
-      '01-02-22',
-      '08:00-10:00',
-      '123-345-567',
-      'Pemrograman Basis Data',
-      'Iwan Hermawan',
-      'MSTIII/02',
-      'Aktivasi'
-    ],
-    [
-      '01-02-22',
-      '08:00-10:00',
-      '123-345-567',
-      'Pemrograman Basis Data',
-      'Iwan Hermawan',
-      'MSTIII/02',
-      'Aktivasi'
-    ],
-    [
-      '01-02-22',
-      '08:00-10:00',
-      '123-345-567',
-      'Pemrograman Basis Data',
-      'Iwan Hermawan',
-      'MSTIII/02',
-      'Aktivasi'
-    ],
-    [
-      '01-02-22',
-      '08:00-10:00',
-      '123-345-567',
-      'Pemrograman Basis Data',
-      'Iwan Hermawan',
-      'MSTIII/02',
-      'Aktivasi'
-    ],
-    [
-      '01-02-22',
-      '08:00-10:00',
-      '123-345-567',
-      'Pemrograman Basis Data',
-      'Iwan Hermawan',
-      'MSTIII/02',
-      'Aktivasi'
-    ],
-    [
-      '01-02-22',
-      '08:00-10:00',
-      '123-345-567',
-      'Pemrograman Basis Data',
-      'Iwan Hermawan',
-      'MSTIII/02',
-      'Aktivasi'
-    ],
-    [
-      '01-02-22',
-      '08:00-10:00',
-      '123-345-567',
-      'Pemrograman Basis Data',
-      'Iwan Hermawan',
-      'MSTIII/02',
-      'Aktivasi'
-    ],
-    [
-      '01-02-22',
-      '08:00-10:00',
-      '123-345-567',
-      'Pemrograman Basis Data',
-      'Iwan Hermawan',
-      'MSTIII/02',
-      'Aktivasi'
-    ],
-    [
-      '01-02-22',
-      '08:00-10:00',
-      '123-345-567',
-      'Pemrograman Basis Data',
-      'Iwan Hermawan',
-      'MSTIII/02',
-      'Aktivasi'
-    ],
-    [
-      '01-02-22',
-      '08:00-10:00',
-      '123-345-567',
-      'Pemrograman Basis Data',
-      'Iwan Hermawan',
-      'MSTIII/02',
-      'Aktivasi'
-    ],
-    [
-      '01-02-22',
-      '08:00-10:00',
-      '123-345-567',
-      'Pemrograman Basis Data',
-      'Iwan Hermawan',
-      'MSTIII/02',
-      'Aktivasi'
-    ],
-    [
-      '01-02-22',
-      '08:00-10:00',
-      '123-345-567',
-      'Pemrograman Basis Data',
-      'Iwan Hermawan',
-      'MSTIII/02',
-      'Aktivasi'
-    ],
+    ['Hari', 'Waktu', 'Kode Matkul', 'Matkul', 'Dosen', 'Ruangan', 'Aksi'],
   ];
+  List<String> secondTableHeader = [
+    'Hari',
+    'Waktu',
+    'Kode Matkul',
+    'Matkul',
+    'Dosen',
+    'Ruangan',
+    'Aksi'
+  ];
+
+  Future<void> getJadwalData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    SharedPreferences prefsId = await SharedPreferences.getInstance();
+    String? token = prefs.getString('user_token');
+    int? mhsId = prefsId.getInt('mhs_id');
+    setState(() {
+      userToken = token ?? '';
+      mhs_id = mhsId ?? 0;
+    });
+
+    // int mahasiswaId =
+    //     Provider.of<MahasiswaIdProvider>(context, listen: false).mahasiswaId;
+
+    print("CekMHSID ${mhsId}");
+
+    print("CekDataMahasiwaID : ${mhsId}");
+    var url =
+        Uri.parse('http://192.168.1.26:3000/api/mahasiswa/$mhsId/jadwal');
+    var headers = {"Authorization": userToken};
+    var response = await http.get(url, headers: headers);
+    debugPrint(mhsId.toString());
+
+    if (response.statusCode == 200) {
+      var responseData = jsonDecode(response.body);
+      var jadwalData = responseData['data'];
+      List<List<String>> newJadwalData = [];
+
+      for (var jadwal in jadwalData) {
+        List<String> rowData = [
+          jadwal['hari'],
+          '${jadwal['jam_mulai']} - ${jadwal['jam_akhir']}',
+          jadwal['kode_mk'],
+          jadwal['nama_mk'],
+          jadwal['dosen'],
+          jadwal['ruangan'],
+          '',
+        ];
+        newJadwalData.add(rowData);
+      }
+
+      setState(() {
+        secondTableData = newJadwalData;
+      });
+    } else {
+      print('Gagal mengambil data jadwal');
+    }
+  }
+
+  void navigateToAktivasiPage(List<String> rowData) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AktivasiPage(jadwalData: rowData),
+      ),
+    );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    getCurrentUserData();
+    getJadwalData();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1430,7 +1576,7 @@ class _SchedulePageState extends State<SchedulePage> {
                     color: Colors.grey[200],
                   ),
                   columns:
-                      secondTableData[0].map<DataColumn>((String columnValue) {
+                      secondTableHeader.map<DataColumn>((String columnValue) {
                     return DataColumn(
                       label: Container(
                         width: 80,
@@ -1449,37 +1595,37 @@ class _SchedulePageState extends State<SchedulePage> {
                     );
                   }).toList(),
                   rows: secondTableData
-                      .sublist(1)
+                      .sublist(0)
                       .map<DataRow>((List<String> rowData) {
                     return DataRow(
-                      cells: rowData.map<DataCell>((String cellValue) {
-                        if (cellValue == 'Aktivasi') {
+                      cells: rowData.asMap().entries.map<DataCell>((entry) {
+                        int index = entry.key;
+                        String cellValue = entry.value;
+                        print("CekValueJadwalKuliah ${cellValue}");
+                        if (index == rowData.length - 1) {
                           return DataCell(
-                            Container(
-                              alignment: Alignment.center,
-                              child: ElevatedButton(
-                                onPressed: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) => AktivasiPage()),
-                                  );
-                                },
-                                style: ButtonStyle(
-                                  backgroundColor:
-                                      MaterialStateProperty.all<Color>(
-                                          Color(0xFF00296B)),
-                                ),
-                                child: Text(
-                                  'Aktivasi',
-                                  style: TextStyle(
-                                    fontFamily: 'Poppins',
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFFFDC500),
+                            Row(
+                              children: [
+                                ElevatedButton(
+                                  onPressed: () {
+                                    navigateToAktivasiPage(rowData);
+                                  },
+                                  style: ButtonStyle(
+                                    backgroundColor:
+                                        MaterialStateProperty.all<Color>(
+                                            Color(0xFF00296B)),
+                                  ),
+                                  child: Text(
+                                    'Aktivasi',
+                                    style: TextStyle(
+                                      fontFamily: 'Poppins',
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFFFDC500),
+                                    ),
                                   ),
                                 ),
-                              ),
+                              ],
                             ),
                           );
                         } else {
@@ -2548,66 +2694,33 @@ class MessageSP3 extends StatelessWidget {
 }
 
 class AktivasiPage extends StatefulWidget {
+  final List<String> jadwalData;
+
+  AktivasiPage({required this.jadwalData});
+
   @override
   State<AktivasiPage> createState() => _AktivasiPageState();
 }
 
 class _AktivasiPageState extends State<AktivasiPage> {
+  int jadwalId = 1;
   TextEditingController topikController = TextEditingController();
-  TimeOfDay selectedStartTime = TimeOfDay.now(); // Store selected start time
-  TimeOfDay selectedEndTime = TimeOfDay.now(); // Store selected end time
-  DateTime? selectedDate; // Store selected date
-  final timeFormat = DateFormat.Hm(); // Format waktu hh:mm
+  TimeOfDay selectedStartTime = TimeOfDay.now();
+  TimeOfDay selectedEndTime = TimeOfDay.now();
+  DateTime? selectedDate;
+  final timeFormat = DateFormat.Hm();
   final timeFormatter =
       FilteringTextInputFormatter.allow(RegExp(r'^[0-9]{0,2}:[0-9]{0,2}$'));
-  String selectedSKS = 'Pilih Jumlah SKS';
-
-  List<List<String>> sourceData = [
-    [
-      'Tahun Ajaran',
-      'Mata Kuliah',
-      'Kode Matkul',
-      'Jadwal',
-      'Dosen',
-      'Ruangan',
-      'Realisasi Tanggal',
-      'Realisasi Jam',
-      'Topik Perkuliahan',
-      'Jumlah SKS',
-    ],
-    [
-      '2022/2023',
-      'Pemrograman Basis Data',
-      '123-345-567',
-      '08.00-10.00',
-      'Iwan Hermawan',
-      'MSTIII/02',
-      'Tanggal Kuliah Real',
-      'Jam Kuliah Real',
-      'Topik Kuliah',
-      'Pilih Jumlah SKS'
-    ]
-  ];
 
   List<List<String>> transposedData = [
-    ['Tahun Ajaran', '2022/2023'],
-    ['Mata Kuliah', 'Pemrograman Basis Data'],
-    ['Kode Matkul', '123-345-567'],
-    ['Jadwal', '08.00-10.00'],
-    ['Dosen', 'Iwan Hermawan'],
-    ['Ruangan', 'MSTIII/02'],
+    ['Mata Kuliah', ''],
+    ['Kode Matkul', ''],
+    ['Jadwal', ''],
+    ['Dosen', ''],
+    ['Ruangan', ''],
     ['Realisasi Tanggal', 'Tanggal Kuliah Real'],
     ['Realisasi Jam', 'Jam Kuliah Real'],
     ['Topik Perkuliahan', 'Topik Kuliah'],
-    ['Jumlah SKS', 'Pilih Jumlah SKS']
-  ];
-
-  List<List<String>> alreadyPresenceTable = [
-    ['No', 'Nama', 'NIM', 'Waktu Presensi'],
-    ['1', 'Talitha Padmarini Shafira', '3.34.20.0.23', '08:00'],
-    ['2', 'Rifka Anggun Puspitaningrum', '3.34.20.0.21', '08:01'],
-    ['3', 'Nur Imam Nazihah', '4.52.20.0.21', '08.02'],
-    ['4', 'Choirul Anam', '4.52.20.0.22', '08.04'],
   ];
 
   @override
@@ -2638,7 +2751,6 @@ class _AktivasiPageState extends State<AktivasiPage> {
     if (pickedTime != null && pickedTime != selectedStartTime) {
       setState(() {
         selectedStartTime = pickedTime;
-        sourceData[1][7] = getFormattedTime(selectedStartTime);
         selectedEndTime = selectedStartTime;
       });
     }
@@ -2653,7 +2765,6 @@ class _AktivasiPageState extends State<AktivasiPage> {
     if (pickedTime != null && pickedTime != selectedEndTime) {
       setState(() {
         selectedEndTime = pickedTime;
-        sourceData[1][7] = getSelectedTimeRange();
       });
     }
   }
@@ -2669,9 +2780,73 @@ class _AktivasiPageState extends State<AktivasiPage> {
     if (pickedDate != null && pickedDate != selectedDate) {
       setState(() {
         selectedDate = pickedDate;
-        sourceData[1][6] = DateFormat('dd-MM-yy').format(selectedDate!);
       });
     }
+  }
+
+  String mataKuliah = '';
+  String kodeMatkul = '';
+  String jadwal = '';
+  String dosen = '';
+  String ruangan = '';
+  String userToken = '';
+
+  Future<void> fetchJadwalData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('user_token');
+    setState(() {
+      userToken = token ?? '';
+    });
+
+    //   var url =
+    //       Uri.parse('http://192.168.18.79:3000/api/mahasiswa/$jadwalId/jadwal');
+    //   var headers = {"Authorization": userToken};
+    //   var response = await http.get(url, headers: headers);
+    //   print('Response: ${response.statusCode} - ${response.body}');
+
+    //   if (response.statusCode == 200) {
+    //     var responseData = jsonDecode(response.body);
+    //     var jadwalDataList = responseData['data'] as List<dynamic>;
+
+    //     if (jadwalDataList.isNotEmpty) {
+    //       var jadwalData =
+    //           jadwalDataList[0]; // Ambil objek jadwal pertama dari list
+    //       setState(() {
+    // mataKuliah = jadwalData['nama_mk'];
+    // kodeMatkul = jadwalData['kode_mk'];
+    // jadwal = '${jadwalData['jam_mulai']} - ${jadwalData['jam_akhir']}';
+    // dosen = jadwalData['dosen'];
+    // ruangan = jadwalData['ruangan'];
+    //       });
+    //     }
+    //   } else {
+    //     print(
+    //         'Gagal mengambil data jadwal: ${response.statusCode} - ${response.body}');
+    //   }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    setState(() {
+      transposedData[0][1] = widget.jadwalData[3];
+      transposedData[1][1] = widget.jadwalData[2];
+      transposedData[2][1] = widget.jadwalData[1];
+      transposedData[3][1] = widget.jadwalData[4];
+      transposedData[4][1] = widget.jadwalData[5];
+
+      // kodeMatkul = jadwalData['kode_mk'];
+      // jadwal = '${jadwalData['jam_mulai']} - ${jadwalData['jam_akhir']}';
+      // dosen = jadwalData['dosen'];
+      // ruangan = jadwalData['ruangan'];
+    });
+    fetchJadwalData();
+
+// // Bagian yang memeriksa dan mengatur jadwalId
+//     String jadwalIdString = widget.jadwalData[0];
+
+// // Melanjutkan ke bagian pemanggilan API
+//     fetchJadwalData(jadwalId);
   }
 
   @override
@@ -2730,6 +2905,7 @@ class _AktivasiPageState extends State<AktivasiPage> {
                     .map<DataRow>((List<String> rowData) {
                   return DataRow(
                     cells: rowData.map<DataCell>((String cellValue) {
+                      print("CekCellValue : ${cellValue}");
                       if (cellValue == 'Topik Kuliah') {
                         return DataCell(
                           TextField(
@@ -2748,9 +2924,7 @@ class _AktivasiPageState extends State<AktivasiPage> {
                               fontWeight: FontWeight.bold,
                             ),
                             onChanged: (value) {
-                              setState(() {
-                                sourceData[1][8] = value;
-                              });
+                              // Logic to update data when text field changes
                             },
                           ),
                         );
@@ -2764,9 +2938,7 @@ class _AktivasiPageState extends State<AktivasiPage> {
                                   backgroundColor: Color(0xffFED500),
                                 ),
                                 child: Text(
-                                  selectedStartTime != null
-                                      ? getFormattedTime(selectedStartTime)
-                                      : 'Mulai Kuliah',
+                                  getFormattedTime(selectedStartTime),
                                   style: TextStyle(
                                     fontFamily: 'Poppins',
                                     fontSize: 10,
@@ -2782,9 +2954,7 @@ class _AktivasiPageState extends State<AktivasiPage> {
                                   backgroundColor: Color(0xffFED500),
                                 ),
                                 child: Text(
-                                  selectedEndTime != null
-                                      ? getFormattedTime(selectedEndTime)
-                                      : 'Akhir Kuliah',
+                                  getFormattedTime(selectedEndTime),
                                   style: TextStyle(
                                     fontFamily: 'Poppins',
                                     fontSize: 10,
@@ -2821,57 +2991,6 @@ class _AktivasiPageState extends State<AktivasiPage> {
                                 ),
                               ),
                             ],
-                          ),
-                        );
-                      } else if (cellValue == 'Pilih Jumlah SKS') {
-                        return DataCell(
-                          DropdownButton<String>(
-                            value: selectedSKS,
-                            items: [
-                              'Pilih Jumlah SKS',
-                              '1 SKS',
-                              '2 SKS',
-                              '3 SKS',
-                              '4 SKS',
-                              '5 SKS',
-                              '6 SKS',
-                              '7 SKS',
-                              '8 SKS',
-                              '9 SKS',
-                              '10 SKS',
-                              '11 SKS',
-                              '12 SKS',
-                              '13 SKS',
-                              '14 SKS',
-                              '15 SKS',
-                              '16 SKS',
-                              '17 SKS',
-                              '18 SKS',
-                              '19 SKS',
-                              '20 SKS',
-                              '21 SKS',
-                              '22 SKS',
-                              '23 SKS',
-                              '24 SKS'
-                            ].map<DropdownMenuItem<String>>((String value) {
-                              return DropdownMenuItem<String>(
-                                value: value,
-                                child: Text(
-                                  value,
-                                  style: TextStyle(
-                                    fontFamily: 'Poppins',
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              );
-                            }).toList(),
-                            onChanged: (newValue) {
-                              setState(() {
-                                selectedSKS = newValue!;
-                                sourceData[1][9] = newValue;
-                              });
-                            },
                           ),
                         );
                       } else {
@@ -2916,16 +3035,7 @@ class _AktivasiPageState extends State<AktivasiPage> {
                     ),
                   ),
                   Text(
-                    "*Setelah klik button AKTIVASI PERKULIAHAN, diharap mahasiswa segera melakukan scan QR Code, karena QR Code hanya berlaku selama 15 menit saja.",
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xffF24E1E),
-                    ),
-                  ),
-                  Text(
-                    "*Apabila jika ada mahasiswa yang lewat 15 menit belum melakukan scan QR Code, harap mengkonfirmasi kepada dosen matakuliah.",
+                    "*Setelah klik button AKTIVASI PERKULIAHAN, diharap mahasiswa segera melakukan scan QR Code.",
                     style: TextStyle(
                       fontFamily: 'Poppins',
                       fontSize: 12,
@@ -2939,56 +3049,109 @@ class _AktivasiPageState extends State<AktivasiPage> {
             SizedBox(height: 20),
             Center(
               child: ElevatedButton(
-                onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return AlertDialog(
-                        title: Text(
-                          'QR Code ini berlaku selama 15 menit',
-                          style: TextStyle(
-                            fontFamily: 'Poppins',
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xff00296B),
-                          ),
-                        ),
-                        content: SizedBox(
-                          width: 300,
-                          height: 280,
-                          child: QrImage(
-                            data:
-                                "kodematkul_realisasi tanggal_realisasi jam_kelas",
-                            version: QrVersions.auto,
-                            size: 200,
-                            foregroundColor: Color(0xff00296B),
-                          ),
-                        ),
-                        actions: [
-                          ElevatedButton(
-                            onPressed: () {
-                              Navigator.of(context).pop();
-                            },
-                            child: Text(
-                              'Close',
-                              style: TextStyle(
-                                fontFamily: 'Poppins',
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Color(0xffFED501),
-                              foregroundColor: Color(0xff00296B),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(9),
-                              ),
-                            ),
-                          ),
-                        ],
-                      );
+                onPressed: () async {
+                  final Map<String, dynamic> requestData = {
+                    "hari": "Senin",
+                    "jam_mulai": "16:00",
+                    "jam_akhir": "19:00",
+                    "waktu_realisasi": "2023-01-15T08:00:00.000Z",
+                    "ruangan": "SB-1/1",
+                    "total_jam": 4,
+                    "topik_perkuliahan": "CSS",
+                    "kelas_mk_dosen_id": 1
+                  };
+
+                  print("CekUserToken $userToken");
+
+                  final response = await http.post(
+                    Uri.parse(
+                        'http://192.168.1.26:3000/api/aktivasiPerkuliahan'),
+                    headers: {
+                      "Content-Type": "application/json",
+                      "Authorization": userToken
                     },
+                    body: jsonEncode(requestData),
                   );
+
+                  if (response.statusCode == 200) {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: Text(
+                            'Berhasil melakukan aktivasi perkuliahan.',
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xff00296B),
+                            ),
+                          ),
+                          actions: [
+                            ElevatedButton(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                              child: Text(
+                                'Close',
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Color(0xffFED501),
+                                foregroundColor: Color(0xff00296B),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(9),
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  } else {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: Text(
+                            'Gagal melakukan aktivasi perkuliahan.',
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xff00296B),
+                            ),
+                          ),
+                          actions: [
+                            ElevatedButton(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                              child: Text(
+                                'Close',
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Color(0xffFED501),
+                                foregroundColor: Color(0xff00296B),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(9),
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Color(0xffFED501),
@@ -3009,67 +3172,12 @@ class _AktivasiPageState extends State<AktivasiPage> {
                   ),
                 ),
               ),
-            ),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: SingleChildScrollView(
-                scrollDirection: Axis.vertical,
-                child: Container(
-                  margin: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-                  child: DataTable(
-                    dataRowHeight: 50,
-                    headingRowHeight: 30,
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey),
-                      color: Colors.grey[200],
-                    ),
-                    columns: alreadyPresenceTable[0]
-                        .map<DataColumn>((String columnValue) {
-                      return DataColumn(
-                        label: Container(
-                          child: Text(
-                            columnValue,
-                            style: TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            maxLines: 5,
-                            overflow: TextOverflow.ellipsis,
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                    rows: alreadyPresenceTable
-                        .sublist(1)
-                        .map<DataRow>((List<String> rowData) {
-                      return DataRow(
-                        cells: rowData.map<DataCell>((String cellValue) {
-                          return DataCell(
-                            Container(
-                              child: Text(
-                                cellValue,
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontFamily: 'Poppins',
-                                  fontSize: 12,
-                                ),
-                                maxLines: 5,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                      );
-                    }).toList(),
-                  ),
-                ),
-              ),
-            ),
+            )
           ],
         ),
       ),
     );
   }
 }
+
+void main() => runApp(MaterialApp(home: SchedulePage()));
