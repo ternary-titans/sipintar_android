@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:presensi_mahasiswa/recap_content.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
@@ -78,48 +79,8 @@ class _ScanQRPageState extends State<ScanQRPage> {
             result = barcode;
             isScanning = false;
           });
-          _showSuccessDialog();
         },
       ),
-    );
-  }
-
-  void _showSuccessDialog() async {
-    await showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text(
-            'Presensi Berhasil',
-            style: TextStyle(
-              fontFamily: 'Poppins',
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          content: Text(
-            'Berhasil melakukan presensi perkuliahan.\n'
-            'Matakuliah: Pemrograman Game\n'
-            'Tanggal: 07-08-2023\n'
-            'Jam: 08.00\n'
-            'Dosen: Liliek Triyono\n'
-            'Topik Perkuliahan: Presentasi Tugas Besar',
-            style: TextStyle(
-              fontFamily: 'Poppins',
-              fontSize: 14,
-              fontWeight: FontWeight.w300,
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Tutup'),
-              onPressed: () {
-                Navigator.pop(context);
-              },
-            ),
-          ],
-        );
-      },
     );
   }
 }
@@ -138,6 +99,10 @@ class SimpleBarcodeScannerPage extends StatefulWidget {
 class _SimpleBarcodeScannerPageState extends State<SimpleBarcodeScannerPage> {
   final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
   late QRViewController controller;
+  bool isCameraPaused = false;
+  String userToken = '';
+
+  int mahasiswaId = -1;
 
   @override
   void dispose() {
@@ -151,35 +116,28 @@ class _SimpleBarcodeScannerPageState extends State<SimpleBarcodeScannerPage> {
       if (scanData.code != null) {
         final result = Barcode(code: scanData.code!);
 
-        // Kirim data QR code ke endpoint
         sendDataToEndpoint(result);
-        // Tampilkan dialog sukses
         _showSuccessDialog(result);
-
-        // Berhenti memindai setelah mendapatkan hasil
         controller.pauseCamera();
-        //widget.onResult(result);
       }
     });
   }
 
-  String userToken = '';
-
-  int mahasiswaId = -1;
-
   void sendDataToEndpoint(Barcode qrCodeData) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
+    SharedPreferences prefsMhsId = await SharedPreferences.getInstance();
     String? token = prefs.getString('user_token');
+    int? mhsId = prefsMhsId.getInt('mhs_id');
     setState(() {
       userToken = token ?? '';
+      mahasiswaId = mhsId ?? 0;
     });
     final String apiUrl = 'http://192.168.0.104:3000/api/presensi';
 
     Map<String, dynamic> requestBody = {
-      'mahasiswaId': 1, // Replace with the actual mahasiswa_id
+      'mahasiswa_id': mahasiswaId, // Replace with the actual mahasiswa_id
       'waktu_presensi': DateTime.now().toUtc().toIso8601String(),
-      'qrData': qrCodeData.code,
-
+      'token': qrCodeData.code,
       // Add other data you want to send to the endpoint
     };
 
@@ -201,8 +159,10 @@ class _SimpleBarcodeScannerPageState extends State<SimpleBarcodeScannerPage> {
     String jwtToken = qrCodeData.code;
     Map<String, dynamic> decodedToken = JwtDecoder.decode(jwtToken);
     print("Cek Decode Token : $decodedToken");
+    print("Cek Token : $jwtToken");
     await showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text(
@@ -226,32 +186,16 @@ class _SimpleBarcodeScannerPageState extends State<SimpleBarcodeScannerPage> {
                 ),
               ),
               SizedBox(height: 10),
-              Text(
-                'QR Code: ${qrCodeData.code}',
-                style: TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 14,
-                  fontWeight: FontWeight.w300,
-                ),
-              ),
-              // Display decoded JWT token data
-              Text(
-                'Nama Mahasiswa: ${decodedToken['nama']}',
-                style: TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 14,
-                  fontWeight: FontWeight.w300,
-                ),
-              ),
-              // Add more information from the decoded token
-              // ...
             ],
           ),
           actions: <Widget>[
             TextButton(
               child: const Text('Tutup'),
               onPressed: () {
-                Navigator.pop(context);
+                Navigator.pop(context); // Close the dialog
+                // Hentikan kamera setelah berhasil mendapatkan hasil scan
+                controller?.resumeCamera();
+                // Navigasi ke RecapPage
               },
             ),
           ],
