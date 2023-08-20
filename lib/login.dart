@@ -19,24 +19,24 @@ class _LoginPageState extends State<LoginPage> {
   bool loginFailed = false;
 
   void _handleLoginButtonPressed() {
-  String nim = nimController.text;
-  String password = passwordController.text;
+    String nim = nimController.text;
+    String password = passwordController.text;
 
-  if (nim.isNotEmpty && password.isNotEmpty) {
-    login(nim, password);
-  } else {
-    print("Username and password are required.");
+    if (nim.isNotEmpty && password.isNotEmpty) {
+      login(nim, password);
+    } else {
+      print("Username and password are required.");
+    }
   }
-}
-
 
   Future<void> login(String nim, String password) async {
-    var url = Uri.parse('http://192.168.1.26:3000/api/users/login');
-    var headers = {"Content-Type": "application/json"}; 
-    var response = await http.post(url,
-     headers: headers,
-    body: jsonEncode({"username": nim, "password": password}),
-  );
+    var url = Uri.parse('http://192.168.0.104:3000/api/users/login');
+    var headers = {"Content-Type": "application/json"};
+    var response = await http.post(
+      url,
+      headers: headers,
+      body: jsonEncode({"username": nim, "password": password}),
+    );
 
     if (response.statusCode == 200) {
       // Login berhasil
@@ -44,6 +44,7 @@ class _LoginPageState extends State<LoginPage> {
       print(responseData);
       var data = responseData['data'];
       token = data['token'];
+      print("TOKEN $token");
       print('Login berhasil');
 
       // Simpan token menggunakan shared_preferences
